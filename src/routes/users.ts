@@ -1,29 +1,31 @@
-import express from 'express';
-import authMiddleware from '../middlewares/auth';
 import Message from '../models/Message';
 import User from '../models/User';
 
-const router = express.Router();
+// @ts-expect-error
+const createUser = async (call, callback) => {
+    console.log('User creation request, name')
+    const {name} = call.request;
+    const user = await User.create({name});
+    callback(null, user)
+}
 
-router.post('/', async (req, res) => {
-    const user = {
-        name: req.body.name,
+// @ts-expect-error
+const getAllChats = async (call, callback) => {
+    const {userId} = call.request;
+    const user = await User.findById(userId);
+
+    if (!user) {
+        return callback(null, {users: []});
     }
 
-    const createdUser = await User.create(user);
-
-    res.send(createdUser.toJSON());
-})
-
-router.get('/', authMiddleware, async (req, res) => {
-    const userId = req.headers.authorization;
-    let users:any = await User.find({'_id': {'$ne': userId}})
-    for (let i = 0; i < users.length; i++) {
-        const lastMessage = (await Message.findOne({to: {$in: [userId, users[i]._id]}}, {}, {sort: {'date': -1}})) ?? null;
-        users[i]._doc.lastMessage = lastMessage
+    let chats = await User.find({'_id': {'$ne': userId}})
+    for (let i = 0; i < chats.length; i++) {
+        const lastMessage = (await Message.findOne({to: {$in: [userId, chats[i]._id]}}, {}, {sort: {'date': -1}})) ?? null;
+        // @ts-expect-error
+        chats[i]._doc.lastMessage = lastMessage
     }
 
-    res.send(users);
-})
+    callback(null, { chats });
+  };
 
-export default router;
+export {createUser, getAllChats};
