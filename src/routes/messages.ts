@@ -15,7 +15,7 @@ const getMessagesHistory = async (call, callback) => {
         return callback(null, {users: []});
     }
 
-    const messages = await Message.find({from: {$in: [userId, chatId]}}, {}, {sort: {'date': -1}});
+    const messages = await Message.find({from: {$in: [userId, chatId]}, to: {$in: [userId, chatId]}}, {}, {sort: {'date': -1}});
 
     callback(null, {messages});
 }
@@ -65,7 +65,7 @@ uploadRouter.post('/video', async (req, res) => {
             to: req.body.to,
             from: req.body.from,
             type: 'video',
-            src:`http://localhost:3000/uploads/video/${name}`,
+            src:`http://45.138.25.10:3000/uploads/video/${name}`,
             date: new Date(),
         })
         observers.map(observer => {
@@ -73,7 +73,7 @@ uploadRouter.post('/video', async (req, res) => {
                 observer.call.write(message);
             }
         })
-        res.sendStatus(201);
+        res.send({src: message.src});
     } catch (err) {
         res.status(500).send(err);
     }
@@ -99,7 +99,7 @@ uploadRouter.post('/audio', async (req, res) => {
             to: req.body.to,
             from: req.body.from,
             type: 'audio',
-            src:`http://localhost:3000/uploads/audio/${name}`,
+            src:`http://45.138.25.10:3000/uploads/audio/${name}`,
             date: new Date(),
         })
         observers.map(observer => {
@@ -108,7 +108,7 @@ uploadRouter.post('/audio', async (req, res) => {
             }
         })
         //send response
-        res.sendStatus(201);        
+        res.send({src: message.src});;        
     } catch (err) {
         console.error('Err', err);
         res.status(500).send(err);
